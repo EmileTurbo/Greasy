@@ -11,13 +11,16 @@ public class ItemBox : MonoBehaviour, IInteractable
     [SerializeField] private GameObject itemBoxVisual10;
     private int stock;
     public bool isEmpty;
-    
+    private Outline outline;
+
 
     private void Start()
     {
+        outline = GetComponentInChildren<Outline>();
+        DisableOutline();
+
         stock = stockMax;
         isEmpty = false;
-
     }
 
     private void Update()
@@ -70,8 +73,25 @@ public class ItemBox : MonoBehaviour, IInteractable
                 {
                     stock--;
                     Item.SpawnItem(itemSO, player);
+
                 }
             }
+        }
+    }
+
+    public void DisableOutline()
+    {
+        if (outline != null)
+        {
+            outline.enabled = false;
+        }
+    }
+
+    public void EnableOutline()
+    {
+        if (outline != null)
+        {
+            outline.enabled = true;
         }
     }
 

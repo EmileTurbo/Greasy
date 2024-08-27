@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 3005502969835344772}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.039, y: 0.735, z: -0.258}
+  m_LocalPosition: {x: -0.048, y: 0.735, z: -0.215}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -81,6 +81,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   grillSpaces:
   - {fileID: 3534536226410380331}
+  - {fileID: 0}
   fryingRecipeSOArray:
   - {fileID: 11400000, guid: 0491650fd3d5642419a42687f5f26465, type: 2}
 --- !u!65 &4521061138347775626
@@ -133,10 +134,15 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 149236602367676634}
     m_Modifications:
+    - target: {fileID: 1153496120015421910, guid: b47d6182d4483974ab769096bd2d8797,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3181915889626216214, guid: b47d6182d4483974ab769096bd2d8797,
         type: 3}
       propertyPath: m_Name
-      value: Toilet...But_its_a_grill
+      value: ToiletGrill_Visual
       objectReference: {fileID: 0}
     - target: {fileID: 3340129155112072520, guid: b47d6182d4483974ab769096bd2d8797,
         type: 3}
@@ -211,7 +217,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3181915889626216214, guid: b47d6182d4483974ab769096bd2d8797,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7466669088835394154}
   m_SourcePrefab: {fileID: 100100000, guid: b47d6182d4483974ab769096bd2d8797, type: 3}
 --- !u!4 &984165261252739026 stripped
 Transform:
@@ -219,3 +229,25 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 2590397521219996314}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1142400787013025164 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3181915889626216214, guid: b47d6182d4483974ab769096bd2d8797,
+    type: 3}
+  m_PrefabInstance: {fileID: 2590397521219996314}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7466669088835394154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1142400787013025164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba1e6e2d11dee0c49b577fddb026a565, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grill: {fileID: 6283581006768079801}
+  particlesGameObject: {fileID: 7821783180468629742, guid: 1e38ead3df83d6f4b9da636ea96404d2,
+    type: 3}
+  grillOnGameObject: {fileID: 0}

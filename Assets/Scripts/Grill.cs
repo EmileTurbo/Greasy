@@ -1,104 +1,148 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
+using static UnityEditor.Progress;
+
 
 public class Grill : MonoBehaviour, IInteractable, IItemParent
 {
-    //[SerializeField] private Transform[] grillSpaceArray;
-    [SerializeField] private Transform grillSpace;
+    [SerializeField] private Transform[] grillSpaces;
     [SerializeField] private FryingRecipeSO[] fryingRecipeSOArray;
-    //private List<Item> items = new List<Item>();
-    private Item item;
-    //private Dictionary<Item, float> fryingTimers = new Dictionary<Item, float>();
-    //private Dictionary<Item, State> state = new Dictionary<Item, State>();
-    private float fryingTimer;
-    private State state;
-    private FryingRecipeSO fryingRecipeSO;
+    [SerializeField] private Button button;
 
-    private enum State
-    {
-        Idle,
-        Frying,
-        Fried,
-        Burned,
-    }
+    public event Action<Transform> OnItemFryingStarted;
+    public event Action<Transform> OnItemFryingStopped;
+    public event Action<bool> OnPowerStateChanged;
+
+    private Dictionary<Transform, ItemData> items = new Dictionary<Transform, ItemData>();
+    private bool isPowered = false;
+    private Outline outline;
 
     private void Start()
     {
-        state = State.Idle;
+        outline = GetComponentInChildren<Outline>();
+        DisableOutline();
+
+        button.OnButtonOn += Button_OnButtonOn;
+        button.OnButtonOff += Button_OnButtonOff;
+    }
+
+    private void Button_OnButtonOff(object sender, EventArgs e)
+    {
+        isPowered = false;
+        OnPowerStateChanged.Invoke(isPowered);
+    }
+
+    private void Button_OnButtonOn(object sender, EventArgs e)
+    {
+        isPowered = true;
+        OnPowerStateChanged.Invoke(isPowered);
     }
 
     private void Update()
     {
-        switch (state)
+        if (isPowered)
         {
-            case State.Idle:
-                break;
-
-            case State.Frying:
-                fryingTimer += Time.deltaTime;
-                if (fryingTimer > fryingRecipeSO.fryingTimerMax)
+            foreach (var slot in grillSpaces)
+            {
+                if (items.ContainsKey(slot))
                 {
-                    // Fried
-                    GetItem().DestroySelf();
+                    ItemData itemData = items[slot];
+                    FryingRecipeSO recipe = GetFryingRecipeSOWithInput(itemData.Item.GetItemSO());
 
-                    Item.SpawnItem(fryingRecipeSO.output, this);
+                    OnItemFryingStarted?.Invoke(slot);
 
-                    state = State.Fried;
+                    if (recipe != null)
+                    {
+                        // Update the frying timer
+                        itemData.FryingTimer += Time.deltaTime;
+                        if (itemData.FryingTimer >= recipe.fryingTimerMax)
+                        {
+                            itemData.Item.DestroySelf();
+                            
+                            Item cookedItem = Item.SpawnItem(recipe.output, this);
+                            cookedItem.transform.parent = slot;
+                            cookedItem.transform.localPosition = Vector3.zero;
+                            cookedItem.transform.localRotation = Quaternion.identity;
+
+                        }
+                        
+                    }
                 }
-                break;
-
-            case State.Fried:
-                break;
-
-            case State.Burned:
-                break;
+            }
             
         }
+        else
+        {
+            foreach (var slot in grillSpaces)
+            {
+                if (items.ContainsKey(slot))
+                {
+                    OnItemFryingStopped?.Invoke(slot);
+                }
+            }
+        }
+
     }
 
     public void Interact(PlayerInteraction player)
     {
         if (player != null)
         {
-            if (!HasItem()) // There is no item here
+            if (player.HasItem())
             {
-                if (player.HasItem()) // Player has an item
+                Item playerItem = player.GetItem(player.GetItemFollowTransform());
+                Transform emptySlot = GetItemFollowTransform();
+
+                if (emptySlot != null)
                 {
-                    if (HasRecipeWithInput(player.GetItem().GetItemSO())) // Player has an item that can be cooked
+                    if (HasFryingRecipeWithInput(playerItem.GetItemSO()))
                     {
-                        player.GetItem().SetItemParent(this);
+                        playerItem.SetItemParent(this);
+                        items[emptySlot] = new ItemData(playerItem);
 
-                        fryingRecipeSO = GetFryingRecipeSOWithInput(GetItem().GetItemSO());
+                        if (isPowered)
+                        {
+                            OnItemFryingStarted?.Invoke(emptySlot);
+                        }
 
-                        state = State.Frying;
-                        fryingTimer = 0f;
+                        Debug.Log("Item added to grill: " + playerItem.GetItemSO().name);
                     }
                 }
-                else // Player has no item
+                else
                 {
-
+                    Debug.Log("No empty slots on the grill.");
                 }
             }
-            else // There is no slots available here
+            else
             {
-                if (player.HasItem()) // Player has an item
-                {
-
-                }
-                else // Player has no item
-                {
-                    
-                }
+                Debug.Log("Player does not have an item to grill.");
             }
         }
     }
 
-    private bool HasRecipeWithInput(ItemSO inputItemSO)
+    public void DisableOutline()
     {
-        FryingRecipeSO fryingRecipeSO = GetFryingRecipeSOWithInput(inputItemSO);
-        return fryingRecipeSO != null;
+        if (outline != null)
+        {
+            outline.enabled = false;
+        }
+    }
+
+    public void EnableOutline()
+    {
+        if (outline != null)
+        {
+            outline.enabled = true;
+        }
+    }
+
+    private bool HasFryingRecipeWithInput(ItemSO inputItemSO)
+    {
+        return GetFryingRecipeSOWithInput(inputItemSO) != null;
     }
 
     private FryingRecipeSO GetFryingRecipeSOWithInput(ItemSO inputItemSO)
@@ -113,52 +157,90 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
         return null;
     }
 
-    private ItemSO GetOutputForInput(ItemSO inputItemSO)
-    {
-        FryingRecipeSO fryingRecipeSO = GetFryingRecipeSOWithInput(inputItemSO);
-        if (fryingRecipeSO != null)
-        {
-            return fryingRecipeSO.output;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
     public Transform GetItemFollowTransform()
     {
-        //for (int i = 0; i < grillSpaceArray.Length; i++)
-        //{
-        //    if (grillSpaceArray[i].childCount == 0)
-        //    {
-        //        return grillSpaceArray[i];
-        //    }
-        //}
-        //return null;
+        foreach (var slot in grillSpaces)
+        {
+            if (!IsSlotOccupied(slot))
+            {
+                return slot;
+            }
+        }
+        return null;
 
-        return grillSpace;
-        
     }
 
-    public void SetItem(Item item)
+    public void SetItem(Item item, Transform slot)
     {
-        this.item = item;
+        items[slot] = new ItemData(item);
     }
 
-    public Item GetItem()
+    public Item GetItem(Transform slot)
     {
-        return item;
+        if (items.ContainsKey(slot))
+        {
+            return items[slot].Item;
+        }
+        return null;
     }
 
-    public void ClearItem()
+    public void ClearItem(Item item)
     {
-        item = null;
+        Transform slotToRemove = null;
+        foreach (var pair in items)
+        {
+            if (pair.Value.Item == item)
+            {
+                slotToRemove = pair.Key;
+                break;
+            }
+        }
+
+        if (slotToRemove != null)
+        {
+            items.Remove(slotToRemove);
+            OnItemFryingStopped?.Invoke(slotToRemove);
+        }
     }
 
     public bool HasItem()
     {
-        return item != null;
+        return items.Count >= grillSpaces.Length;
     }
+
+    public bool IsSlotOccupied(Transform slot)
+    {
+        return items.ContainsKey(slot);
+    }
+
+    public bool HasMultipleSlots()
+    {
+        return true;
+    }
+
+    public Transform GetSlotForItem(Item item)
+    {
+        foreach (var pair in items)
+        {
+            if (pair.Value.Item == item)
+            {
+                return pair.Key;
+            }
+        }
+        return null; // Slot not found
+    }
+
+    public class ItemData
+    {
+        public Item Item { get; private set; }
+        public float FryingTimer { get; set; }
+
+        public ItemData(Item item)
+        {
+            Item = item;
+            FryingTimer = 0f;
+        }
+    }
+
 
 }

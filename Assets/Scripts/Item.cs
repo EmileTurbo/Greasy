@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,19 +6,37 @@ using UnityEngine;
 public class Item : MonoBehaviour, IInteractable
 {
     [SerializeField] private ItemSO itemSO;
+
+    private Outline outline;
     private IItemParent itemParent;
+
+    private void Start()
+    {
+        outline = GetComponentInChildren<Outline>();
+        DisableOutline();
+    }
 
     public ItemSO GetItemSO()
     {
         return itemSO;
     }
 
-
     public void SetItemParent(IItemParent itemParent)
     {
+        bool isGettingReplaced;
+
+        if (this.itemParent != null && this.itemParent.HasMultipleSlots())
+        {
+            isGettingReplaced = true;
+        }
+        else
+        {
+            isGettingReplaced = false;
+        }
+
         if (this.itemParent != null)
         {
-            this.itemParent.ClearItem();
+            this.itemParent.ClearItem(this);
         }
 
         this.itemParent = itemParent;
@@ -34,10 +53,37 @@ public class Item : MonoBehaviour, IInteractable
         }
         else
         {
-            itemParent.SetItem(this);
-            transform.parent = itemParent.GetItemFollowTransform();
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            if (isGettingReplaced)
+            {
+                Transform slot = itemParent.GetSlotForItem(this);
+                if (slot != null)
+                {
+                    itemParent.SetItem(this, slot);
+                    transform.parent = slot;
+                    transform.localPosition = Vector3.zero;
+                    transform.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    Debug.LogError("No available slot found for the item.");
+                }
+            }
+            else
+            {
+                Transform slot = itemParent.GetItemFollowTransform();
+                if (slot != null)
+                {
+                    itemParent.SetItem(this, slot);
+                    transform.parent = slot;
+                    transform.localPosition = Vector3.zero;
+                    transform.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    Debug.LogError("No available slot found for the item.");
+                }
+            }
+            
         }
     }
 
@@ -49,7 +95,7 @@ public class Item : MonoBehaviour, IInteractable
 
     public void DestroySelf()
     {
-        itemParent.ClearItem();
+        itemParent.ClearItem(this);
         Destroy(gameObject);
     }
 
@@ -67,6 +113,23 @@ public class Item : MonoBehaviour, IInteractable
         }
     }
 
+    public void DisableOutline()
+    {
+        if (outline != null)
+        {
+            outline.enabled = false;
+        }
+        
+    }
+
+    public void EnableOutline()
+    {
+        if (outline != null)
+        {
+            outline.enabled |= true;
+        }
+    }
+
     public Rigidbody GetRigidbody()
     {
         return GetComponent<Rigidbody>();
@@ -77,10 +140,11 @@ public class Item : MonoBehaviour, IInteractable
         Transform itemTransform = Instantiate(itemSO.prefab);
         itemTransform.GetComponent<Item>().SetItemParent(itemParent);
         Item item = itemTransform.GetComponent<Item>();
-        itemParent.GetItem().transform.localPosition = Vector3.zero;
-        itemParent.GetItem().transform.localRotation = Quaternion.identity;
+        Transform slot = itemParent.GetSlotForItem(item);
+        itemParent.GetItem(slot).transform.localPosition = Vector3.zero;
+        itemParent.GetItem(slot).transform.localRotation = Quaternion.identity;
 
-        Rigidbody rb = itemParent.GetItem().GetRigidbody();
+        Rigidbody rb = itemParent.GetItem(slot).GetRigidbody();
         if (rb != null)
         {
             rb.isKinematic = true;
@@ -89,3 +153,4 @@ public class Item : MonoBehaviour, IInteractable
         return item;
     }
 }
+

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour, IItemParent
@@ -8,16 +9,13 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
 
     [SerializeField] private GameInput gameInput;
     [SerializeField] private Transform playerCameraTransform;
-    [SerializeField] private LayerMask pickUpLayerMask;
     [SerializeField] private float InteractDistance = 3f;
-    [SerializeField] private GameObject pickUpTextObj;
-    [SerializeField] private GameObject takeTextObj;
-    [SerializeField] private GameObject emptyTextObj;
     [SerializeField] private float dropForwardForce, dropUpwardForce;
     [SerializeField] private Transform itemHoldPoint;
 
     RaycastHit hit;
     private Item item;
+    IInteractable currentInteractable;
 
     private void Start()
     {
@@ -44,7 +42,6 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
     {       
         if (hit.collider != null)
         {
-
             if (hit.collider.gameObject.TryGetComponent(out IInteractable interactObj))
             {
                 interactObj.Interact(this);
@@ -59,48 +56,65 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
 
     private void HandleDetection()
     {
-        if (hit.collider != null)
-        {
-            pickUpTextObj.SetActive(false);
-            takeTextObj.SetActive(false);
-            emptyTextObj.SetActive(false);
-        }
-
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out hit, InteractDistance))
         {
-            if (hit.collider.gameObject.GetComponent<Item>() && !HasItem())
+            if (hit.collider.gameObject.TryGetComponent(out IInteractable interactObj))
             {
-                pickUpTextObj.SetActive(true);
-                
-            }
-
-            if (hit.collider.gameObject.GetComponent<ItemBox>() && !HasItem())
-            {
-                if (hit.collider.gameObject.GetComponent<ItemBox>().isEmpty)
+                if (currentInteractable != null)
                 {
-                    emptyTextObj.SetActive(true);
+                    if (interactObj != currentInteractable)
+                    {
+                        currentInteractable.DisableOutline();
+                    }
+                }
+
+                if (HasItem())
+                {
+                    if (hit.collider.gameObject.GetComponent<Grill>() || hit.collider.gameObject.GetComponent<Button>()) 
+                    {
+                        SetNewCurrentInteractable(interactObj);
+                    }
                 }
                 else
                 {
-                    takeTextObj.SetActive(true);
+                    SetNewCurrentInteractable(interactObj);
                 }
+
                 
-            }
 
-            if (hit.collider.gameObject.GetComponent<Grill>() && HasItem())
+
+            }
+            else // if not interactable
             {
-                pickUpTextObj.SetActive(true);
-
+                DisableCurrentInteractable();
             }
+        }
+        else // if nothing in reach
+        {
+            DisableCurrentInteractable();
+        }
+    }
+
+    private void SetNewCurrentInteractable(IInteractable newInteractObj)
+    {
+        currentInteractable = newInteractObj;
+        currentInteractable.EnableOutline();
+    }
+
+    private void DisableCurrentInteractable()
+    {
+        if (currentInteractable != null)
+        {
+            currentInteractable.DisableOutline();
+            currentInteractable = null;
         }
     }
 
     private void Drop()
     {
-        Rigidbody rbody = item.GetRigidbody();
-
         if (item != null && HasItem())
         {
+            Rigidbody rbody = item.GetRigidbody();
             item.SetItemParent(null);
 
             if (rbody != null)
@@ -114,7 +128,7 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
                 rbody.AddTorque(new Vector3(random, random, random) * 10);
             }
 
-            ClearItem();
+            ClearItem(item);
         }
     }
 
@@ -123,23 +137,41 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
         return itemHoldPoint;
     }
 
-    public void SetItem(Item item)
+    public void SetItem(Item item, Transform slot)
     {
         this.item = item;
     }
 
-    public Item GetItem()
+    public Item GetItem(Transform slot)
     {
         return item;
     }
 
-    public void ClearItem()
+    public void ClearItem(Item itemToRemove)
     {
-        item = null;
+        if (item == itemToRemove)
+        {
+            item = null;
+        }
     }
 
     public bool HasItem()
     {
         return item != null;
+    }
+
+    public bool IsSlotOccupied(Transform slot)
+    {
+        return false;
+    }
+
+    public bool HasMultipleSlots()
+    {
+        return false;
+    }
+
+    public Transform GetSlotForItem(Item item)
+    {
+        return itemHoldPoint;
     }
 }
