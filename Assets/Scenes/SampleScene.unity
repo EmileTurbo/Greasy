@@ -1233,6 +1233,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f4bcaabd382c304daa813af488a750c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  burgerPosition: {fileID: 1353762294}
+  validItemSOList:
+  - {fileID: 11400000, guid: 2c19f26005c996e4dadf55ba0d1b3ac1, type: 2}
+  - {fileID: 11400000, guid: d00855ea4b0236c40a3e8962a64a708e, type: 2}
+  - {fileID: 11400000, guid: 24a5e246bbed1b64abe90eef6bed1903, type: 2}
+  - {fileID: 11400000, guid: c0e0472e4b8b82346aeb82e01225f03a, type: 2}
+  - {fileID: 11400000, guid: 1806818a093ecc54fa8774bdd0ee6a35, type: 2}
 --- !u!65 &667992862
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2094,7 +2101,7 @@ PrefabInstance:
     - target: {fileID: 4157675622442232391, guid: d77388825004c11408a0272383d1ca8a,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 1.002
       objectReference: {fileID: 0}
     - target: {fileID: 4157675622442232391, guid: d77388825004c11408a0272383d1ca8a,
         type: 3}

@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: BottomBreadSO
   m_EditorClassIdentifier: 
   prefab: {fileID: 4157675622442232391, guid: d77388825004c11408a0272383d1ca8a, type: 3}
+  prefab_Visual: {fileID: 3812876574508226176, guid: bc49891f572f1164e9938f845ec37ab0,
+    type: 3}
   objectName: Bottom Bread
   sprite: {fileID: 0}

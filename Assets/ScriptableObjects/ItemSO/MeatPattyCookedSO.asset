@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: MeatPattyCookedSO
   m_EditorClassIdentifier: 
   prefab: {fileID: 4157675622442232391, guid: 85208bc30f087cd4cb7bf04cfe8caea9, type: 3}
+  prefab_Visual: {fileID: 3812876574508226176, guid: e879ff1414d1dd64c9ad7b04bffdfaef,
+    type: 3}
   objectName: Cooked Meat Patty
   sprite: {fileID: 0}

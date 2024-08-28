@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: TopBreadSO
   m_EditorClassIdentifier: 
   prefab: {fileID: 4157675622442232391, guid: d5746cb36795dcb41ae0f81044c7c783, type: 3}
+  prefab_Visual: {fileID: 3812876574508226176, guid: 7a97429cce0d0a44990c546d5a73035f,
+    type: 3}
   objectName: Top Bread
   sprite: {fileID: 0}
