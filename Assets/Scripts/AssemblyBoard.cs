@@ -17,12 +17,16 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
     [SerializeField] private List<ItemSO> validItemSOList;
     private List<ItemSO> itemSOList;
     private GameObject burger;
+    private float burgerHeight;
+    private float burgerCenter;
     private bool burgerCompleted;
 
     private void Awake()
     {
         itemSOList = new List<ItemSO>();
         burgerCompleted = false;
+        burgerHeight = 0f;
+        burgerCenter = 0f;
     }
 
     private bool TryAddIngredient(ItemSO itemSO)
@@ -36,14 +40,7 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
                     InitializeBurgerGameObject();
                 }
 
-                itemSOList.Add(itemSO);
-                SpawnIngredient(itemSO);
-                OnIngredientAdded?.Invoke(this, new OnIngredientAddedEventArgs
-                {
-                    itemSO = itemSO
-                });
-
-                Debug.Log("Ingredient added" + itemSO);
+                AddIngredientToBurger(itemSO);
 
                 return true;
             }
@@ -55,15 +52,10 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
         }
         else if (itemSO == validItemSOList[1])
         {
-            itemSOList.Add(itemSO);
-            SpawnIngredient(itemSO);
-            OnIngredientAdded?.Invoke(this, new OnIngredientAddedEventArgs
-            {
-                itemSO = itemSO
-            });
-            Debug.Log("Ingredient added" + itemSO + "Burger Completed");
+            AddIngredientToBurger(itemSO);
 
             burgerCompleted = true;
+
             return true;
         }
         else if (itemSO == validItemSOList[0] && itemSOList.Count != 0)
@@ -80,17 +72,28 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
         }
         else
         {
-            itemSOList.Add(itemSO);
-            SpawnIngredient(itemSO);
-            OnIngredientAdded?.Invoke(this, new OnIngredientAddedEventArgs
-            {
-                itemSO = itemSO
-            });
-            Debug.Log("Ingredient added" + itemSO);
+            AddIngredientToBurger(itemSO);
             return true;
         }
 
         
+    }
+
+    private void AddIngredientToBurger(ItemSO itemSO)
+    {
+        itemSOList.Add(itemSO);
+
+        SpawnIngredient(itemSO);
+
+        burgerHeight = burgerHeight + GetIngredientHeight(itemSO);
+        burgerCenter = burgerCenter + GetIngredientColliderCenter(itemSO);
+
+        OnIngredientAdded?.Invoke(this, new OnIngredientAddedEventArgs
+        {
+            itemSO = itemSO
+        });
+        Debug.Log(burgerHeight);
+        Debug.Log("Ingredient added" + itemSO);
     }
 
     private void InitializeBurgerGameObject()
@@ -98,6 +101,32 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
         burger = new GameObject("Burger");
         burger.transform.position = burgerPosition.position; 
         burger.transform.rotation = burgerPosition.rotation;
+    }
+
+    private float GetIngredientHeight(ItemSO itemSO)
+    {
+        BoxCollider itemCollider = itemSO.prefab.GetComponent<BoxCollider>();
+        if (itemCollider != null)
+        {
+            return itemCollider.size.y;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    private float GetIngredientColliderCenter(ItemSO itemSO)
+    {
+        BoxCollider itemCollider = itemSO.prefab.GetComponent<BoxCollider>();
+        if (itemCollider != null)
+        {
+            return itemCollider.center.y;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     private void SpawnIngredient(ItemSO itemSO)
@@ -113,8 +142,10 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
         {
             Transform ingredientVisual = Instantiate(itemSO.prefab_Visual);
             ingredientVisual.SetParent(burger.transform, false);
-            ingredientVisual.transform.localPosition = new Vector3(0, itemSOList.Count * 0.05f, 0);
+            ingredientVisual.transform.localPosition = new Vector3(0, burgerHeight, 0);
             ingredientVisual.transform.localRotation = Quaternion.identity;
+
+
         }
     }
 
@@ -127,8 +158,8 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
             Rigidbody rb = burger.AddComponent<Rigidbody>();
             rb.isKinematic = true;
 
-            boxCollider.size = new Vector3(0.35f, ((itemSOList.Count - 2) * 0.05f) + 0.22f, 0.35f);
-            boxCollider.center = new Vector3(0, itemSOList.Count * 0.04f, 0);
+            boxCollider.size = new Vector3(0.32f, burgerHeight, 0.32f);
+            boxCollider.center = new Vector3(0, (burgerHeight / 2f), 0);
 
             // Add Burger component
             Burger completedBurger = burger.AddComponent<Burger>();
@@ -138,11 +169,10 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
 
             // Clear the assembly board visuals
             itemSOList.Clear();
+            burgerHeight = 0f;
             burgerCompleted = false;
             burger = null;
         }
-
-
     }
 
     public List<ItemSO> GetItemSOList()

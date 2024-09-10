@@ -44,7 +44,7 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
 
     private void Update()
     {
-        if (isPowered)
+        if (isPowered) // powered
         {
             foreach (var slot in grillSpaces)
             {
@@ -75,7 +75,7 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
             }
             
         }
-        else
+        else // Not powered
         {
             foreach (var slot in grillSpaces)
             {

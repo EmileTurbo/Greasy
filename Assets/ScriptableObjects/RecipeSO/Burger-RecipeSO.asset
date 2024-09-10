@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da1bcb0c34dae574395e7ab522ed67fa, type: 3}
   m_Name: Burger-RecipeSO
   m_EditorClassIdentifier: 
-  itemSOList: []
+  ingredientItemSOList:
+  - {fileID: 11400000, guid: 2c19f26005c996e4dadf55ba0d1b3ac1, type: 2}
+  - {fileID: 11400000, guid: c0e0472e4b8b82346aeb82e01225f03a, type: 2}
+  - {fileID: 11400000, guid: d00855ea4b0236c40a3e8962a64a708e, type: 2}
+  optionalIngredientItemSOList:
+  - {fileID: 11400000, guid: 52051fb459d50454d90b41ce1f1329e2, type: 2}
+  - {fileID: 11400000, guid: d740584a924ae324cb11717858d1da50, type: 2}
   recipeName: Burger
-  outputItemSO: {fileID: 0}

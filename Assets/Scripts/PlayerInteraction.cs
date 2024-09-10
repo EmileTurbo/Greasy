@@ -9,7 +9,7 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
 
     [SerializeField] private GameInput gameInput;
     [SerializeField] private Transform playerCameraTransform;
-    [SerializeField] private float InteractDistance = 3f;
+    [SerializeField] private float InteractDistance = 4f;
     [SerializeField] private float dropForwardForce, dropUpwardForce;
     [SerializeField] private Transform itemHoldPoint;
 
