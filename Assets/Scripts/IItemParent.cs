@@ -11,5 +11,6 @@ public interface IItemParent
     public bool HasItem();
     public bool IsSlotOccupied(Transform slot);
     public bool HasMultipleSlots();
+    public bool IsPlayer();
     public Transform GetSlotForItem(Item item);  // Get the slot for a specific item
 }

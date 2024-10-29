@@ -1,0 +1,11 @@
+Model Information:
+* title:	CC0 - Food Container 4
+* source:	https://sketchfab.com/3d-models/cc0-food-container-4-03749821e3a9441e9868fea0a7d991cc
+* author:	plaggy (https://sketchfab.com/plaggy)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "CC0 - Food Container 4" (https://sketchfab.com/3d-models/cc0-food-container-4-03749821e3a9441e9868fea0a7d991cc) by plaggy (https://sketchfab.com/plaggy) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49b6d78ca27a3eb48832fc5d79f868d3, type: 3}
+  m_Name: FountainDrinkSO
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 9021661138258547682, guid: e83c9b6b7ded1884ea0b1344c975f7e8, type: 3}
+  prefab_Visual: {fileID: 5992485777860727345, guid: e730f43057da20f45a97ceef8a453b36,
+    type: 3}
+  objectName: Fountain Drink
+  sprite: {fileID: 0}

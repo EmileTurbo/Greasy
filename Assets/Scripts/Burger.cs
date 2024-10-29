@@ -9,7 +9,6 @@ public class Burger : Item
     public void Initialize(List<ItemSO> ingredients)
     {
         ingredientsList = new List<ItemSO>(ingredients);
-        Debug.Log("Burger Ingredient : " + ingredientsList.Count);
     }
 
     public List<ItemSO> GetIngredientsList()

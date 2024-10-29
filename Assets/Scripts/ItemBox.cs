@@ -94,5 +94,4 @@ public class ItemBox : MonoBehaviour, IInteractable
             outline.enabled = true;
         }
     }
-
 }

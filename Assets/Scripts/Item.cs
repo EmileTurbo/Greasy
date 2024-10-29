@@ -12,7 +12,7 @@ public class Item : MonoBehaviour, IInteractable
 
     private void Start()
     {
-        outline = GetComponentInChildren<Outline>();
+        outline = GetComponent<Outline>() ?? GetComponentInChildren<Outline>();
         DisableOutline();
     }
 
@@ -21,9 +21,10 @@ public class Item : MonoBehaviour, IInteractable
         return itemSO;
     }
 
-    public void SetItemParent(IItemParent itemParent)
+    public void SetItemParent(IItemParent itemParent, Transform spot)
     {
         bool isGettingReplaced;
+        BoxCollider collider = GetCollider();
 
         if (this.itemParent != null && this.itemParent.HasMultipleSlots())
         {
@@ -43,8 +44,28 @@ public class Item : MonoBehaviour, IInteractable
 
         if (itemParent == null)
         {
+            if (collider != null)
+            {
+                collider.enabled = true;
+            }
+
             transform.parent = null;
             return;
+        }
+
+        if (itemParent.IsPlayer())
+        {
+            if (collider != null)
+            {
+                collider.enabled = false;
+            }
+        }
+        else
+        {
+            if (collider != null)
+            {
+                collider.enabled = true;
+            }
         }
 
         if (itemParent.HasItem())
@@ -70,11 +91,10 @@ public class Item : MonoBehaviour, IInteractable
             }
             else
             {
-                Transform slot = itemParent.GetItemFollowTransform();
-                if (slot != null)
+                if (spot != null)
                 {
-                    itemParent.SetItem(this, slot);
-                    transform.parent = slot;
+                    itemParent.SetItem(this, spot);
+                    transform.parent = spot;
                     transform.localPosition = Vector3.zero;
                     transform.localRotation = Quaternion.identity;
                 }
@@ -87,7 +107,6 @@ public class Item : MonoBehaviour, IInteractable
         }
     }
 
-
     public IItemParent GetItemParent()
     {
         return itemParent;
@@ -99,17 +118,11 @@ public class Item : MonoBehaviour, IInteractable
         Destroy(gameObject);
     }
 
-    public void Interact(PlayerInteraction player)
+    public virtual void Interact(PlayerInteraction player)
     {
-        Rigidbody rb = GetRigidbody();
-
         if (!player.HasItem())
         {
-            SetItemParent(player);
-            if (rb != null)
-            {
-                rb.isKinematic = true;
-            }
+            SetItemParent(player, player.GetItemFollowTransform());
         }
     }
 
@@ -118,15 +131,14 @@ public class Item : MonoBehaviour, IInteractable
         if (outline != null)
         {
             outline.enabled = false;
-        }
-        
+        }      
     }
 
     public void EnableOutline()
     {
         if (outline != null)
         {
-            outline.enabled |= true;
+            outline.enabled = true;
         }
     }
 
@@ -135,10 +147,15 @@ public class Item : MonoBehaviour, IInteractable
         return GetComponent<Rigidbody>();
     }
 
+    public BoxCollider GetCollider()
+    {
+        return GetComponent<BoxCollider>();
+    }
+
     public static Item SpawnItem(ItemSO itemSO, IItemParent itemParent)
     {
         Transform itemTransform = Instantiate(itemSO.prefab);
-        itemTransform.GetComponent<Item>().SetItemParent(itemParent);
+        itemTransform.GetComponent<Item>().SetItemParent(itemParent, itemParent.GetItemFollowTransform());
         Item item = itemTransform.GetComponent<Item>();
         Transform slot = itemParent.GetSlotForItem(item);
         itemParent.GetItem(slot).transform.localPosition = Vector3.zero;

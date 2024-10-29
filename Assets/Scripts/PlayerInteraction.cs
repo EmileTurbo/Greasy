@@ -58,7 +58,7 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
     {
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out hit, InteractDistance))
         {
-            if (hit.collider.gameObject.TryGetComponent(out IInteractable interactObj))
+            if (hit.collider.gameObject.TryGetComponent(out IInteractable interactObj)) // Player is looking at something interactable
             {
                 if (currentInteractable != null)
                 {
@@ -68,21 +68,18 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
                     }
                 }
 
-                if (HasItem())
+                if (HasItem()) // Player is holding an item
                 {
-                    if (hit.collider.gameObject.GetComponent<Grill>() || hit.collider.gameObject.GetComponent<Button>()) 
+                    // C'est du code de marde ca caliss AHHAHAAH JE M'EN CALISSE
+                    if (hit.collider.gameObject.GetComponent<Grill>() || hit.collider.gameObject.GetComponent<Button>() || hit.collider.gameObject.GetComponent<Bag>() || hit.collider.gameObject.GetComponent<AssemblyBoard>() || hit.collider.gameObject.GetComponent<DrinkMachine>() || hit.collider.gameObject.GetComponent<CustomerNPC>()) 
                     {
                         SetNewCurrentInteractable(interactObj);
                     }
                 }
-                else
+                else // PLayer is NOT holding an item
                 {
                     SetNewCurrentInteractable(interactObj);
                 }
-
-                
-
-
             }
             else // if not interactable
             {
@@ -115,7 +112,8 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
         if (item != null && HasItem())
         {
             Rigidbody rbody = item.GetRigidbody();
-            item.SetItemParent(null);
+
+            item.SetItemParent(null, null);
 
             if (rbody != null)
             {
@@ -139,6 +137,19 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
 
     public void SetItem(Item item, Transform slot)
     {
+        BoxCollider collider = item.GetCollider();
+        Rigidbody rb = item.GetRigidbody();
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+        }
+
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+
         this.item = item;
     }
 
@@ -168,6 +179,11 @@ public class PlayerInteraction : MonoBehaviour, IItemParent
     public bool HasMultipleSlots()
     {
         return false;
+    }
+
+    public bool IsPlayer()
+    {
+        return true;
     }
 
     public Transform GetSlotForItem(Item item)

@@ -27,19 +27,20 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
         DisableOutline();
 
         button.OnButtonOn += Button_OnButtonOn;
-        button.OnButtonOff += Button_OnButtonOff;
-    }
-
-    private void Button_OnButtonOff(object sender, EventArgs e)
-    {
-        isPowered = false;
-        OnPowerStateChanged.Invoke(isPowered);
     }
 
     private void Button_OnButtonOn(object sender, EventArgs e)
     {
-        isPowered = true;
-        OnPowerStateChanged.Invoke(isPowered);
+        if (isPowered)
+        {
+            isPowered = false;
+            OnPowerStateChanged.Invoke(isPowered);
+        }
+        else
+        {
+            isPowered = true;
+            OnPowerStateChanged.Invoke(isPowered);
+        }
     }
 
     private void Update()
@@ -67,13 +68,10 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
                             cookedItem.transform.parent = slot;
                             cookedItem.transform.localPosition = Vector3.zero;
                             cookedItem.transform.localRotation = Quaternion.identity;
-
-                        }
-                        
+                        }                      
                     }
                 }
-            }
-            
+            }   
         }
         else // Not powered
         {
@@ -85,7 +83,6 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
                 }
             }
         }
-
     }
 
     public void Interact(PlayerInteraction player)
@@ -101,7 +98,7 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
                 {
                     if (HasFryingRecipeWithInput(playerItem.GetItemSO()))
                     {
-                        playerItem.SetItemParent(this);
+                        playerItem.SetItemParent(this, emptySlot);
                         items[emptySlot] = new ItemData(playerItem);
 
                         if (isPowered)
@@ -218,6 +215,11 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
         return true;
     }
 
+    public bool IsPlayer()
+    {
+        return false;
+    }
+
     public Transform GetSlotForItem(Item item)
     {
         foreach (var pair in items)
@@ -241,6 +243,4 @@ public class Grill : MonoBehaviour, IInteractable, IItemParent
             FryingTimer = 0f;
         }
     }
-
-
 }

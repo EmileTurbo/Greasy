@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using static Grill;
 
 public class OrderCounter : MonoBehaviour
 {
@@ -9,15 +9,23 @@ public class OrderCounter : MonoBehaviour
     [SerializeField] private Transform spawnLocation;
     [SerializeField] private Transform customerNPCPrefab;
     [SerializeField] private float spawnTimer = 15f;
-    public List<RecipeSO> recipes;
     private Dictionary<Transform, CustomerNPC> customers = new Dictionary<Transform, CustomerNPC>();
     private float timer = 0f;
+    private GameData gameData;
+    private Order currentOrder;
 
+    private void Start()
+    {
+        gameData = GameData.Instance;
+    }
 
     private void Update()
     {
-        UpdateCustomerNPCTargetWaitingSpot();
-        SpawnCustomerNPC();
+        if (customers.Count != waitingLinePointsList.Count)
+        {
+            UpdateCustomerNPCTargetWaitingSpot();
+        }
+        SpawnCustomerNPC(); // Temporaire
         HandleCustomerAtCounter();
     }
 
@@ -47,20 +55,16 @@ public class OrderCounter : MonoBehaviour
 
             if (timer >= spawnTimer)
             {
-                Debug.Log("spawn");
                 Transform waitingSpot = GetWaitingLinePoint();
 
-                Transform npcTransform = Instantiate(customerNPCPrefab);
-                npcTransform.position = spawnLocation.position;
-                npcTransform.rotation = Quaternion.identity;
-
+                Transform npcTransform = Instantiate(customerNPCPrefab, spawnLocation.position, Quaternion.identity);
                 CustomerNPC customerNPC = npcTransform.GetComponent<CustomerNPC>();
+
                 customerNPC.SetTargetWaitingSpot(waitingSpot);
                 customers[waitingSpot] = customerNPC;
 
                 timer = 0f;
-            }
-            
+            }       
         }
         else
         {
@@ -128,9 +132,125 @@ public class OrderCounter : MonoBehaviour
     public void RemoveCustomerNPCFromDictionary(CustomerNPC customerNPC)
     {
         Transform targetWaitingSpot = customerNPC.GetTargetWaitingSpot();
-        customers.Remove(targetWaitingSpot, out customerNPC);
-        
+        customers.Remove(targetWaitingSpot, out customerNPC);     
+    } 
+
+    public List<Transform> GetWaitingPointList()
+    {
+        return waitingLinePointsList;
     }
 
-    
+    public Order GetCurrentOrder()
+    {
+        return currentOrder;
+    }
+
+    private MainItem GenerateMainItem()
+    {
+        // Retrieve available recipes
+        List<RecipeSO> availableRecipes = gameData.GetAvailableRecipeSOList();
+
+        RecipeSO selectedRecipe = availableRecipes[Random.Range(0, availableRecipes.Count)];
+        List<ItemSO> ingredients = new List<ItemSO>(selectedRecipe.ingredientItemSOList);
+        List<ItemSO> optionalIngredients = new List<ItemSO>();
+
+        // Randomize optional ingredients
+        foreach (var optionalIngredient in selectedRecipe.optionalIngredientItemSOList)
+        {
+            if (UnityEngine.Random.Range(0, 2) == 1) // 50% chance of adding each optional ingredient
+            {
+                optionalIngredients.Add(optionalIngredient);
+            }
+        }
+
+        MainItem newMainItem = new MainItem(selectedRecipe, ingredients, optionalIngredients);
+        return newMainItem;
+    }
+
+    public Order GenerateOrder()
+    {
+        List<MainItem> mainItems = new List<MainItem>();
+        List<ItemSO> secondaryItems = new List<ItemSO>();
+        // Retrieve available recipes
+        List<ItemSO> availableSecondaryItems = gameData.GetAvailableSecondaryItemList();
+
+        // Determine number of main items based on difficulty
+        int mainItemCount = 1; // Minimum of 1 main item
+        if (Random.value <= 0.25f) // 25% chance to add one main item
+        {
+            mainItemCount++;
+        }
+
+        for (int i = 0; i < gameData.GetDiffIndex();  i++)
+        {
+            if (Random.value < (0.1f * GameData.Instance.GetDiffIndex())) // Higher difficulty, more chance for additional items
+            {
+                mainItemCount++;
+            }
+        }
+
+        // Create main items
+        for (int i = 0; i < mainItemCount; i++)
+        {
+            MainItem newMainItem = GenerateMainItem();
+            mainItems.Add(newMainItem);
+        }
+
+        // Determine number of secondary items based on difficulty
+        int secondaryItemCount = 0; // Minimum of 1 main item
+        if (Random.value <= 0.50f) // 50% chance to add one main item
+        {
+            secondaryItemCount++;
+        }
+
+        for (int i = 0; i < gameData.GetDiffIndex(); i++)
+        {
+            if (Random.value < (0.1f * GameData.Instance.GetDiffIndex())) // Higher difficulty, more chance for additional items
+            {
+                secondaryItemCount++;
+            }
+        }
+
+        if (secondaryItemCount != 0)
+        {
+            for (int i = 0; i < secondaryItemCount; i++)
+            {
+                if (availableSecondaryItems.Count > 0)
+                {
+                    ItemSO selectedSecondaryItem = availableSecondaryItems[Random.Range(0, availableSecondaryItems.Count)];
+                    secondaryItems.Add(selectedSecondaryItem);
+                }
+            }
+        }
+
+        Order newOrder = new Order(mainItems, secondaryItems);
+        currentOrder = newOrder; // Set the current order
+        return newOrder;
+    }
+
+    public class Order
+    {
+        public List<MainItem> mainItemList { get; private set; }
+        public List<ItemSO> secondaryItemList { get; private set; }
+
+        public Order(List<MainItem> mainItems, List<ItemSO> secondaryItems)
+        {
+            mainItemList = mainItems;
+            secondaryItemList = secondaryItems;
+        }
+    }
+
+    public class MainItem
+    {
+        public RecipeSO baseRecipeSO { get; private set; } // e.g., a basic burger or cheeseburger... or Jeremy's throbbing ballsack :)
+        public List<ItemSO> ingredientsList { get; private set; } // List of mandatory ingredients (bread, meat, etc.)
+        public List<ItemSO> optionalIngredientsList { get; private set; } // Optional ingredients (lettuce, tomato, etc.)
+
+        public MainItem(RecipeSO baseRecipe, List<ItemSO> ingredients, List<ItemSO> optionalIngredients)
+        {
+            this.baseRecipeSO = baseRecipe;
+            this.ingredientsList = ingredients;
+            this.optionalIngredientsList = optionalIngredients;
+        }
+    }
 }

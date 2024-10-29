@@ -132,6 +132,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: ApplianceButton_Visual
       objectReference: {fileID: 0}
+    - target: {fileID: 5957254137196963481, guid: 9a526cfacd39f7641a13a344801437c7,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

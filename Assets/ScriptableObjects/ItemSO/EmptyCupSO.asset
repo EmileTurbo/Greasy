@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49b6d78ca27a3eb48832fc5d79f868d3, type: 3}
+  m_Name: EmptyCupSO
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 8961843729806362229, guid: f51d961e5384f1e4f98fe0c4e21749f4, type: 3}
+  prefab_Visual: {fileID: 7661524356202538920, guid: 1ccf14811ff960248bc1a23ba20ac981,
+    type: 3}
+  objectName: Empty Cup
+  sprite: {fileID: 0}

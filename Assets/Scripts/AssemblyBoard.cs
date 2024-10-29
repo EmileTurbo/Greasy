@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public class AssemblyBoard : MonoBehaviour, IInteractable
 {
 
-    public event EventHandler<OnIngredientAddedEventArgs> OnIngredientAdded; 
+    public event EventHandler<OnIngredientAddedEventArgs> OnIngredientAdded;
     public class OnIngredientAddedEventArgs : EventArgs
     {
         public ItemSO itemSO;
@@ -16,24 +17,35 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
     [SerializeField] private Transform burgerPosition;
     [SerializeField] private List<ItemSO> validItemSOList;
     private List<ItemSO> itemSOList;
+    private List<Transform> itemVisualList;
     private GameObject burger;
     private float burgerHeight;
     private float burgerCenter;
     private bool burgerCompleted;
+    private Outline outline;
+    private Transform currentTopItem;
+    
 
     private void Awake()
     {
         itemSOList = new List<ItemSO>();
+        itemVisualList = new List<Transform>();
         burgerCompleted = false;
         burgerHeight = 0f;
         burgerCenter = 0f;
     }
 
+    private void Start()
+    {
+        outline = GetComponent<Outline>();
+        DisableOutline();
+    }
+
     private bool TryAddIngredient(ItemSO itemSO)
     {
-        if (itemSOList.Count == 0)
+        if (itemSOList.Count == 0) // Si il n'y a pas d'ingredient sur la table
         {
-            if (itemSO == validItemSOList[0]) // Bottom Bun
+            if (itemSO == validItemSOList[0]) // Si c'est un Bottom Bun
             {
                 if (burger == null)
                 {
@@ -50,7 +62,7 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
                 return false;
             }
         }
-        else if (itemSO == validItemSOList[1])
+        else if (itemSO == validItemSOList[1]) // Si un top bun est placé
         {
             AddIngredientToBurger(itemSO);
 
@@ -58,7 +70,7 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
 
             return true;
         }
-        else if (itemSO == validItemSOList[0] && itemSOList.Count != 0)
+        else if (itemSO == validItemSOList[0] && itemSOList.Count != 0) // Si un bottom bun veux etre placé mais il y a deja des ingredients
         {
             Debug.Log("Nope");
             return false;
@@ -92,6 +104,7 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
         {
             itemSO = itemSO
         });
+
         Debug.Log(burgerHeight);
         Debug.Log("Ingredient added" + itemSO);
     }
@@ -137,6 +150,8 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
             ingredientVisual.SetParent(burger.transform, false);
             ingredientVisual.transform.localPosition = Vector3.zero;   
             ingredientVisual.transform.localRotation = Quaternion.identity;
+            itemVisualList.Add(ingredientVisual);
+            currentTopItem = ingredientVisual;
         }
         else
         {
@@ -144,8 +159,8 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
             ingredientVisual.SetParent(burger.transform, false);
             ingredientVisual.transform.localPosition = new Vector3(0, burgerHeight, 0);
             ingredientVisual.transform.localRotation = Quaternion.identity;
-
-
+            itemVisualList.Add(ingredientVisual);
+            currentTopItem = ingredientVisual;
         }
     }
 
@@ -163,9 +178,13 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
 
             // Add Burger component
             Burger completedBurger = burger.AddComponent<Burger>();
+            // Add Outline component 
+            Outline burgerOutline = burger.AddComponent<Outline>();
+            burgerOutline.enabled = false;
+
             completedBurger.Initialize(GetItemSOList());
 
-            completedBurger.SetItemParent(player);
+            completedBurger.SetItemParent(player, player.GetItemFollowTransform());
 
             // Clear the assembly board visuals
             itemSOList.Clear();
@@ -184,7 +203,7 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
     {
         if (player != null)
         {
-            if (player.HasItem() && !burgerCompleted)
+            if (player.HasItem() && !burgerCompleted) // Player is holding an item and the burger is not completed
             {
                 Item playerItem = player.GetItem(player.GetItemFollowTransform());
                 ItemSO playerItemSO = playerItem.GetItemSO();
@@ -194,22 +213,146 @@ public class AssemblyBoard : MonoBehaviour, IInteractable
                     playerItem.DestroySelf();
                 }
             }
-            else if (!player.HasItem() && burgerCompleted)
+            else if (!player.HasItem() && burgerCompleted) // Player is NOT holding an item and the burger is not completed
             {
+                DisableOutline();
                 PickupCompletedBurger(player);
+            }
+            else if (!player.HasItem() && !burgerCompleted)// Player is NOT holding an item and the burger is NOT not completed (pick up last placed ingredient)
+            {
+                if (itemSOList.Count > 0) // There is at least one ingredient on the table
+                {
+                    int nbIngredient = itemSOList.Count;
+                    ItemSO itemSOToRemove = itemSOList[nbIngredient - 1];
+                    Transform ingredientToPickUP = Instantiate(itemSOList[nbIngredient - 1].prefab);
+                    if (ingredientToPickUP.TryGetComponent<Item>(out Item item))
+                    {
+                        BoxCollider collider = item.GetCollider();
+                        item.SetItemParent(player, player.GetItemFollowTransform());
+                        if (collider != null)
+                        {
+                            collider.enabled = false;
+                        }
+                    }
+
+                    // Remove the item from the lists
+                    itemSOList.RemoveAt(nbIngredient - 1);
+
+                    // Remove the corresponding visual from the burger
+                    Transform visualToRemove = itemVisualList[nbIngredient - 1];
+                    Destroy(visualToRemove.gameObject);
+                    itemVisualList.RemoveAt(nbIngredient - 1);
+
+                    // Update burgerHeight since an item was removed
+                    burgerHeight -= GetIngredientHeight(itemSOToRemove);
+
+                    if (itemVisualList.Count == 0)
+                    {
+                        currentTopItem = null;
+                    }
+                    else
+                    {
+                        currentTopItem = itemVisualList[itemVisualList.Count - 1];
+                    }
+                }
             }
         }
     }
 
     public void DisableOutline()
     {
-
+        if (itemSOList.Count == 0) // No ingredients on the table, disable the table's outline
+        {
+            if (outline != null)
+            {
+                outline.enabled = false;  // Disable the assembly board's outline
+            }
+        }
+        else if (burgerCompleted)
+        {
+            foreach (var item in itemVisualList)
+            {
+                if (item != null)
+                {
+                    Outline itemOutline = item.GetComponent<Outline>();
+                    if (itemOutline != null)
+                    {
+                        itemOutline.enabled = false;
+                    }
+                }
+            }
+        }
+        else // Ingredients are on the table, disable the top item's outline
+        {
+            if (currentTopItem != null) // Disable the outline for the topmost item
+            {
+                Outline itemOutline = currentTopItem.GetComponent<Outline>();
+                if (itemOutline != null)
+                {
+                    itemOutline.enabled = false;
+                }
+            }
+        }
     }
 
     public void EnableOutline()
     {
+        if (itemSOList.Count == 0) // No ingredients on the table, outline the table itself
+        {
+            if (outline != null)
+            {
+                outline.enabled = true;  // Enable the assembly board's outline
+            }
+        }
+        else if (burgerCompleted) // Top bun is placed
+        {
+            if (outline != null)
+            {
+                outline.enabled = false;  // Disable the assembly board's outline
+            }
 
+            foreach (var item in itemVisualList)
+            {
+                if (item != null)
+                {
+                    Outline itemOutline = item.GetComponent<Outline>();
+                    if(itemOutline != null)
+                    {
+                        itemOutline.enabled = true;
+                    }
+                }
+            }
+        }
+        else // Ingredients are on the table, outline the top item
+        {
+            if (outline != null)
+            {
+                outline.enabled = false;  // Disable the assembly board's outline
+            }
+
+            // Disable the outline of the previous top item (if any)
+            if (itemVisualList.Count > 1)
+            {
+                Transform previousTopItem = itemVisualList[itemVisualList.Count - 2];
+                if (previousTopItem != null)
+                {
+                    Outline previousOutline = previousTopItem.GetComponent<Outline>();
+                    if (previousOutline != null)
+                    {
+                        previousOutline.enabled = false;  // Disable the outline for the previous item
+                    }
+                }
+            }
+
+            // Enable the outline for the current top item
+            if (currentTopItem != null)
+            {
+                Outline itemOutline = currentTopItem.GetComponent<Outline>();
+                if (itemOutline != null)
+                {
+                    itemOutline.enabled = true;  // Enable the outline for the topmost item
+                }
+            }
+        }
     }
-
-
 }
